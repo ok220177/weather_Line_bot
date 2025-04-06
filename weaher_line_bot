@@ -1,0 +1,47 @@
+// 「ACCESS_TOKEN」をLINE Notifyのaccess tokenに書き換え。
+const ACCESS_TOKEN= "access token";
+async function weatherForecast() {
+  const response = await UrlFetchApp.fetch("天気URL");
+  const json= await JSON.parse(response.getContentText());
+  const today_info = json["forecasts"][0];
+  const tomorrow_info = json["forecasts"][1];
+  const descriptionBodyText = json["description"]["bodyText"];
+  // Find the index of the first occurrence of "【"
+  const startIndex = descriptionBodyText.indexOf("【");
+
+  // Include the "【" and extract the text after it
+  const extractedText = startIndex !== -1 ? descriptionBodyText.substring(startIndex) : descriptionBodyText;
+
+  // let strBody = `
+  // ${today_info["date"].replace(/-/g, "/")} ${json["location"]["city"]}
+  // 天気: ${today_info["telop"]}
+  // 詳細: ${today_info["description"]["text"]}
+  
+  // ${tomorrow_info["date"].replace(/-/g, "/")} ${json["location"]["city"]}
+  // 天気: ${tomorrow_info["telop"]}
+  // 詳細: ${tomorrow_info["description"]["text"]}
+  // `;
+
+  let strBody = `
+  ${today_info["date"].replace(/-/g,"/")} ${json["location"]["city"]}
+  天気: ${today_info["telop"]}
+  ${tomorrow_info["date"].replace(/-/g,"/")} ${json["location"]["city"]}
+  天気: ${tomorrow_info["telop"]}
+  ${extractedText}
+  `.replace(/^\s+/gm, '');
+  
+  sendToLine(strBody);
+}
+
+// LINE送信処理
+function sendToLine(text){
+  const token = ACCESS_TOKEN;
+  const options =
+   {
+     "method"  : "post",
+     "payload" : "message=" + text,
+     "headers" : {"Authorization" : "Bearer "+ token}
+   };
+   UrlFetchApp.fetch("Line_notify", options);
+}
+
